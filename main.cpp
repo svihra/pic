@@ -10,14 +10,14 @@ using namespace std;
 // general stats
 const static double m_error = 1e-27;
 
-const static double m_widthX = 3e-2;                                        // X width in m
-const static double m_widthY = 2e-2;                                        // Y width in m
+const static double m_widthX = 3e-3;                                        // X width in m
+const static double m_widthY = 2e-3;                                        // Y width in m
 const static unsigned long m_density = 1e12;                                // electrons per meter^2
 const static unsigned long m_nParticles = m_density * m_widthX * m_widthY;  // computed number of particles
-const static uint m_nMacroParticles = 100000;                                 // used number of particles
+const static uint m_nMacroParticles = 100000;                               // used number of particles
 const static uint m_multStats = m_nParticles/m_nMacroParticles;             // multiplication factor for stats (real/used particles)
-const static uint m_nIterations = 0;
-const static uint m_nIterationsEmpty = 0;
+const static uint m_nIterations = 1;
+const static uint m_nIterationsEmpty = 1;
 
 // used constants
 const static double m_eps_0    = 8.854e-12;
@@ -36,8 +36,8 @@ const static double m_ionTemp = 1e7;                // K
 const static double m_ionVel  = sqrt((m_boltzman*m_ionTemp)/(m_multStats*m_ionMass));//7e-2 // m s-1
 
 // used scales
-const static int m_sizeX = 150;
-const static int m_sizeY = 100;
+const static int m_sizeX = 300;
+const static int m_sizeY = 200;
 const static double dx = m_widthX/m_sizeX;
 const static double dy = m_widthY/m_sizeY;
 const static double dt = dx/m_elVel;
@@ -134,7 +134,7 @@ void SaveField(ofstream *file, double field[m_sizeX][m_sizeY])
 int SaveField(uint iter, double field[m_sizeX][m_sizeY], string name)
 {
     ofstream file;
-    file.open("../output/fields/" + name + "_" + to_string(iter) + ".txt");
+    file.open("./output/fields/" + name + "_" + to_string(iter) + ".txt");
     if (!file)
         return -1;
     for (int x = 0; x < m_sizeX; x++)
@@ -153,7 +153,7 @@ int SaveField(uint iter, double field[m_sizeX][m_sizeY], string name)
 int SaveField(uint iter, double field[m_sizeX][m_sizeY][3], string name)
 {
     ofstream file;
-    file.open("../output/fields/" + name + "_" + to_string(iter) + ".txt");
+    file.open("./output/fields/" + name + "_" + to_string(iter) + ".txt");
     if (!file)
         return -1;
     for (int x = 0; x < m_sizeX; x++)
@@ -279,7 +279,7 @@ void SaveParticles(ofstream *file, deque<t_particle > *particles, int charge)
 int SaveParticles(uint iter, deque<t_particle > *particles, int charge, string name)
 {
     ofstream file;
-    file.open("../output/particles/" + name + "_" + to_string(iter) + ".txt");
+    file.open("./output/particles/" + name + "_" + to_string(iter) + ".txt");
     if (!file)
         return -1;
 
@@ -304,7 +304,7 @@ int SaveParticles(uint iter, deque<t_particle > *particles, int charge, string n
 // Collisions of particles
 void EvaluateCollisions(deque<t_particle > *particles, deque<t_particle > *particlesPassed)
 {
-    bool passed;
+    bool passed = false;
     uint nPassed = 0;
 
     int *x, *y;
@@ -438,34 +438,6 @@ int main()
     cout << "##############################################" << endl;
 
     srand(time(NULL));
-    //
-    // Open files for saving
-    ofstream filePhi;
-    filePhi.open("./phi.txt");
-    if (!filePhi)
-        return -1;
-
-    ofstream fileRho;
-    fileRho.open("./rho.txt");
-    if (!fileRho)
-        return -1;
-
-    ofstream fileElField;
-    fileElField.open("./elField.txt");
-    if (!fileElField)
-        return -1;
-
-    ofstream fileElStart;
-    fileElStart.open("./electronsStart.txt");
-    if (!fileElStart)
-        return -1;
-
-    ofstream fileElStop;
-    fileElStop.open("./electronsStop.txt");
-    if (!fileElStop)
-        return -1;
-
-    // -------------------------
 
     double rho[m_sizeX][m_sizeY];
     double phi[m_sizeX][m_sizeY];
@@ -599,8 +571,6 @@ int main()
         ionSource.push_back(ion);
         // -------------------------
     }
-    SaveParticles(&fileElStart,&electronSource,-1);
-    fileElStart.close();
 
     //
     // Main part of the code
@@ -640,25 +610,6 @@ int main()
         cout << "##### " << (100*(ionMove+1))/m_nIterations <<"% completed ###########################" << endl;
         cout << "##############################################" << endl;
     }
-    // -------------------------
-
-    //
-    // Save data and close files
-    SaveField(&filePhi,phi);
-    filePhi.close();
-    SaveField(&fileRho,rho);
-    fileRho.close();
-
-    for (int x = 0; x < m_sizeX; x++)
-    {
-        for (int y = 0; y < m_sizeY; y++)
-        {
-            fileElField << x*dx << " " << y*dy << " " << elField[x][y][0] << " " << elField[x][y][1] << endl;
-        }
-    }
-
-    SaveParticles(&fileElStop,&electrons,-1);
-    fileElStop.close();
     // -------------------------
 
     //
