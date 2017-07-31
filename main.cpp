@@ -174,7 +174,7 @@ int SaveField(uint iter, double field[m_sizeX][m_sizeY][3], string name)
 void CalculatePotential(double phi[m_sizeX][m_sizeY], double rho[m_sizeX][m_sizeY])
 {
     cout << "Calculating potential:" << endl;
-    bool loopFlag;
+    bool loopFlag = true;
     double phi_diff, err;
     double omega = 1.56;
     uint iter = 0;
