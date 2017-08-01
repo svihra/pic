@@ -45,7 +45,7 @@ const static double dt = dx/m_elVel;
 // used geometry
 bool m_geometry[m_sizeX][m_sizeY];
 
-
+// defined structures
 struct t_particle {
     double pos[2];
     double vel[3];
