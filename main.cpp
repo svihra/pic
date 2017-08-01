@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <deque>
 #include <ctime>
 #include <cstdlib>
@@ -10,8 +11,8 @@ using namespace std;
 // general stats
 const static double m_error = 1e-27;
 
-const static double m_widthX = 3e-3;                                        // X width in m
-const static double m_widthY = 2e-3;                                        // Y width in m
+const static double m_widthX = 1.5e-3;                                        // X width in m
+const static double m_widthY = 1.5e-3;                                        // Y width in m
 const static unsigned long m_density = 1e12;                                // electrons per meter^2
 const static unsigned long m_nParticles = m_density * m_widthX * m_widthY;  // computed number of particles
 const static uint m_nMacroParticles = 100000;                               // used number of particles
@@ -37,7 +38,7 @@ const static double m_ionVel  = sqrt((m_boltzman*m_ionTemp)/(m_multStats*m_ionMa
 
 // used scales
 const static int m_sizeX = 300;
-const static int m_sizeY = 200;
+const static int m_sizeY = 300;
 const static double dx = m_widthX/m_sizeX;
 const static double dy = m_widthY/m_sizeY;
 const static double dt = dx/m_elVel;
@@ -134,7 +135,9 @@ void SaveField(ofstream *file, double field[m_sizeX][m_sizeY])
 int SaveField(uint iter, double field[m_sizeX][m_sizeY], string name)
 {
     ofstream file;
-    file.open("./output/fields/" + name + "_" + to_string(iter) + ".txt");
+    stringstream fileName;
+    fileName << "./output/fields/" << name << "_" << iter << ".txt";
+    file.open(fileName.str());
     if (!file)
         return -1;
     for (int x = 0; x < m_sizeX; x++)
@@ -153,7 +156,9 @@ int SaveField(uint iter, double field[m_sizeX][m_sizeY], string name)
 int SaveField(uint iter, double field[m_sizeX][m_sizeY][3], string name)
 {
     ofstream file;
-    file.open("./output/fields/" + name + "_" + to_string(iter) + ".txt");
+    stringstream fileName;
+    fileName << "./output/fields/" << name << "_" << iter << ".txt";
+    file.open(fileName.str());
     if (!file)
         return -1;
     for (int x = 0; x < m_sizeX; x++)
@@ -279,7 +284,9 @@ void SaveParticles(ofstream *file, deque<t_particle > *particles, int charge)
 int SaveParticles(uint iter, deque<t_particle > *particles, int charge, string name)
 {
     ofstream file;
-    file.open("./output/particles/" + name + "_" + to_string(iter) + ".txt");
+    stringstream fileName;
+    fileName << "./output/particles/" << name << "_" << iter << ".txt";
+    file.open(fileName.str());
     if (!file)
         return -1;
 
@@ -435,6 +442,7 @@ int main()
     cout << "x = " << m_widthX << ", dx = " << dx << endl;
     cout << "y = " << m_widthY << ", dy = " << dy << endl;
     cout << "Te = " << m_elTemp << ", ne = " << m_density << endl;
+    cout << "Ve = " << m_elVel << ", B = " << VectorPow((double*) m_magB, 0.5) << endl;
     cout << "##############################################" << endl;
 
     srand(time(NULL));
@@ -457,10 +465,10 @@ int main()
     //
     // rotation due to mag field
     double magBMagnitudeSquared = VectorPow((double*) m_magB, 1);
-    double magOmegaEl  = magBMagnitudeSquared * m_elMC  / (2.0 * M_PI);
-    double magOmegaIon = magBMagnitudeSquared * m_ionMC / (2.0 * M_PI);
-    double magLarmorEl  = m_elVel/(m_elMC*magBMagnitudeSquared);
-    double magLarmorIon = m_ionVel/(m_ionMC*magBMagnitudeSquared);
+    double magOmegaEl  = sqrt(magBMagnitudeSquared) * m_elMC  / (2.0 * M_PI);
+    double magOmegaIon = sqrt(magBMagnitudeSquared) * m_ionMC / (2.0 * M_PI);
+    double magLarmorEl  = (2.0 * M_PI)*m_elVel/(m_elMC*sqrt(magBMagnitudeSquared));
+    double magLarmorIon = (2.0 * M_PI)*m_ionVel/(m_ionMC*sqrt(magBMagnitudeSquared));
     cout << "Electrons: omega: " << magOmegaEl << ", larmor radius: " << magLarmorEl << endl;
     cout << "Ions: omega: " << magOmegaIon << ", larmor radius: " << magLarmorIon << endl;
 
