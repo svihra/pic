@@ -137,7 +137,7 @@ int SaveField(uint iter, double field[m_sizeX][m_sizeY], string name)
     ofstream file;
     stringstream fileName;
     fileName << "./output/fields/" << name << "_" << iter << ".txt";
-    file.open(fileName.str());
+    file.open(fileName.str().c_str());
     if (!file)
         return -1;
     for (int x = 0; x < m_sizeX; x++)
@@ -158,7 +158,7 @@ int SaveField(uint iter, double field[m_sizeX][m_sizeY][3], string name)
     ofstream file;
     stringstream fileName;
     fileName << "./output/fields/" << name << "_" << iter << ".txt";
-    file.open(fileName.str());
+    file.open(fileName.str().c_str());
     if (!file)
         return -1;
     for (int x = 0; x < m_sizeX; x++)
@@ -286,7 +286,7 @@ int SaveParticles(uint iter, deque<t_particle > *particles, int charge, string n
     ofstream file;
     stringstream fileName;
     fileName << "./output/particles/" << name << "_" << iter << ".txt";
-    file.open(fileName.str());
+    file.open(fileName.str().c_str());
     if (!file)
         return -1;
 
