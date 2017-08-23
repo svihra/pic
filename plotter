@@ -1,5 +1,5 @@
 #!/bin/bash
-N=$(nproc)
+N=$(nproc)-1
 
 echo "Running particles plotter using $N cores"
 for (( i = 0; i < $1; i++))

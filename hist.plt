@@ -23,12 +23,12 @@ widthB=1
 
 #function used to map a value to the intervals
 hist(x,width)=width*floor(x/width)+width/2.0
-set term pngcairo size 1200,600
+set term png size 1200,600
 set yrange [0:]
 
 #to put an empty boundary around the
 #data inside an autoscaled graph.
-set offset graph 0.05,0.05,0.05,0.0
+#set offset graph 0.05,0.05,0.05,0.0
 set style fill solid 0.5 #fillstyle
 set tics out nomirror
 #set xlabel "v"
