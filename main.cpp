@@ -17,21 +17,22 @@ const static unsigned long m_density = 1e12;                                // e
 const static unsigned long m_nParticles = m_density * m_widthX * m_widthY;  // computed number of particles
 const static uint m_nMacroParticles = 100000;                               // used number of particles
 const static uint m_multStats = m_nParticles/m_nMacroParticles;             // multiplication factor for stats (real/used particles)
-const static uint m_nIterations = 1;
+const static uint m_nIterations = 200;
 const static uint m_nIterationsEmpty = 1;
+const static double m_probCollisions = 0.02;
 
 // used constants
 const static double m_eps_0    = 8.854e-12;
 const static double m_boltzman = 1.38064852e-23;    // m2 kg s-2 K-1
 const static double m_charge   = 1.602e-19;         // C
-const static double m_magB[3]  = {5,-5,0};          // B
+const static double m_magB[3]  = {5,0,0};          // B
 const static double m_magBSize = sqrt(pow(m_magB[0],2)+pow(m_magB[1],2)+pow(m_magB[2],2));
 
 const static double m_elMass  = 9.1094e-31;          // kg
 const static double m_elMC    = -1.758820024e11;     // C/kg
 const static double m_elTemp  = 1e7;                 // K 1e7
 const static double m_elVel   = sqrt((m_boltzman*m_elTemp)/(m_multStats*m_elMass));//1 // m s-1
-const static double m_elOmega = m_magBSize * m_elMC  / (2.0 * M_PI);
+const static double m_elOmega = -m_magBSize * m_elMC  / (2.0 * M_PI);
 const static double m_elLarm  = m_elVel / m_elOmega;
 
 const static double m_ionMass  = 1.6726e-27;         // kg
@@ -41,13 +42,16 @@ const static double m_ionVel   = sqrt((m_boltzman*m_ionTemp)/(m_multStats*m_ionM
 const static double m_ionOmega = m_magBSize * m_ionMC  / (2.0 * M_PI);
 const static double m_ionLarm  = m_ionVel / m_ionOmega;
 
+const static double m_neutMass = m_ionMass + m_elMass;
+const static double m_neutVel  = m_ionVel;
+
 // used scales
 const static int m_sizeX = 300;
 const static int m_sizeY = 300;
 const static double dx = m_widthX/m_sizeX;
 const static double dy = m_widthY/m_sizeY;
 
-const static double dt = (dx/m_elVel) < (-0.2/m_elOmega) ? (dx/m_elVel) : (-0.2/m_elOmega);   // dt is either one spatial step or fifth of cyclotron frequency
+const static double dt = (dx/m_elVel) < (0.1/m_elOmega) ? (dx/m_elVel) : (0.1/m_elOmega);   // dt is either one spatial step or fifth of cyclotron frequency
 
 // used geometry
 bool m_geometry[m_sizeX][m_sizeY];
@@ -64,13 +68,18 @@ struct t_magField {
     double sin[3];
 };
 
+enum t_particleType {
+    t_electron = -1,
+    t_proton = 1
+};
+
 // ################################################################################
 // HELPFUL MATH CODE
 // ################################################################################
 
 //
 // Power of sum of squares of 3D vector (3 elements in array)
-double VectorPow(double a[3], double power)
+double VectorPower(double a[3], double power)
 {
     return pow((pow(a[0],2)+pow(a[1],2)+pow(a[2],2)),power);
 }
@@ -113,7 +122,9 @@ void InitGeometry()
         {
             if (x == 0 || y == 0 || x == m_sizeX-1 || y == m_sizeY-1)
                 m_geometry[x][y] = true;
-            else if (y < m_sizeY / 4 && (x < m_sizeX / 3 || x > m_sizeX - (m_sizeX / 3) ))
+            else if (x == 0 || y == 1 )
+                m_geometry[x][y] = true;
+            else if (y <= (int) (m_sizeY / 3) && (x <= (int) (m_sizeX / 3) || x >= (int) (m_sizeX - (m_sizeX / 3) )))
                 m_geometry[x][y] = true;
             else
                 m_geometry[x][y] = false;
@@ -125,15 +136,15 @@ void InitGeometry()
 
 //
 // Initialize magnetic field
-void InitMagField(t_magField* magFieldConst)
+void InitMagField(t_magField* magFieldConst, double particleMC)
 {
-    double magBMagnitudeSquared = VectorPow((double*) m_magB, 1);
+    double magBMagnitudeSquared = VectorPower((double*) m_magB, 1);
 
     // tan for mag field
     if (magBMagnitudeSquared != 0)
     {
-        magFieldConst->tan[0] = m_magB[0] * tan(m_elMC * magBMagnitudeSquared * dt / 2.0) / magBMagnitudeSquared;
-        magFieldConst->tan[1] = m_magB[1] * tan(m_elMC * magBMagnitudeSquared * dt / 2.0) / magBMagnitudeSquared;
+        magFieldConst->tan[0] = m_magB[0] * tan(particleMC * magBMagnitudeSquared * dt / 2.0) / magBMagnitudeSquared;
+        magFieldConst->tan[1] = m_magB[1] * tan(particleMC * magBMagnitudeSquared * dt / 2.0) / magBMagnitudeSquared;
         magFieldConst->tan[2] = 0;
     }
     else
@@ -143,12 +154,64 @@ void InitMagField(t_magField* magFieldConst)
         magFieldConst->tan[2] = 0;
     }
 
-    double magTanElMagnitudeSquared = VectorPow(magFieldConst->tan,1);
+    double magTanElMagnitudeSquared = VectorPower(magFieldConst->tan,1);
 
     // sin for mag field
     magFieldConst->sin[0] = 2 * magFieldConst->tan[0] / (1 + magTanElMagnitudeSquared);
     magFieldConst->sin[1] = 2 * magFieldConst->tan[1] / (1 + magTanElMagnitudeSquared);
     magFieldConst->sin[2] = 0;
+}
+
+int SaveArray(uint iter, double field[m_sizeX][m_sizeY], string name)
+{
+    ofstream file;
+    stringstream fileName;
+    fileName << "./output/fields/" << name << "_" << iter << ".txt";
+    file.open(fileName.str().c_str());
+    if (!file)
+        return -1;
+    int bin = 0;
+    int x,y;
+
+    y = (int) (m_sizeY / 3);
+    for (x = 0; x < (int) (m_sizeX / 3); x++)
+    {
+        file << bin << " " << field[x][y] << endl;
+        bin++;
+    }
+
+    x = (int) (m_sizeX / 3);
+    for (int y = (int) (m_sizeY / 3); y > 1; y++)
+    {
+        file << bin << " " << field[x][y] << endl;
+        bin++;
+    }
+
+    y = 1;
+    for (x = (int) (m_sizeX / 3); x < (int) (m_sizeX - (m_sizeX / 3)); x++)
+    {
+        file << bin << " " << field[x][y] << endl;
+        bin++;
+    }
+
+    x = (int) (m_sizeX - (m_sizeX / 3));
+    for (int y = 1; y < (int) (m_sizeY / 3); y++)
+    {
+        file << bin << " " << field[x][y] << endl;
+        bin++;
+    }
+
+    y = (int) (m_sizeY / 3);
+    for (x = (int) (m_sizeX - (m_sizeX / 3)); x < m_sizeX; x++)
+    {
+        file << bin << " " << field[x][y] << endl;
+        bin++;
+    }
+
+    file.close();
+
+    cout << "Array " << name << " " << iter << " saved to a file. Number of bins is " << bin << "." << endl;
+    return 0;
 }
 
 //
@@ -165,6 +228,10 @@ void SaveField(ofstream *file, double field[m_sizeX][m_sizeY])
 
     cout << "Field saved to a file." << endl;
 }
+
+//
+// SAVE GEOMETRICAL ARRAY THAT WE ARE INTERESTED IN
+//
 
 int SaveField(uint iter, double field[m_sizeX][m_sizeY], string name)
 {
@@ -286,9 +353,9 @@ void CalculateField(double elField[m_sizeX][m_sizeY][3], double phi[m_sizeX][m_s
 // Calculate charge to grid
 void ChargeToGrid(deque<t_particle > *particles, double rho_p, double rho[m_sizeX][m_sizeY])
 {
-    uint n_particles = particles->size();
+    uint nParticles = particles->size();
     int *x, *y;
-    for (uint iter = 0; iter < n_particles; iter++)
+    for (uint iter = 0; iter < nParticles; iter++)
     {
         x = &particles->at(iter).node[0];
         y = &particles->at(iter).node[1];
@@ -306,12 +373,12 @@ void ChargeToGrid(deque<t_particle > *particles, double rho_p, double rho[m_size
 
 //
 // Save particles to a file
-void SaveParticles(ofstream *file, deque<t_particle > *particles, int charge)
+void SaveParticles(ofstream *file, deque<t_particle > *particles, t_particleType charge)
 {
-    uint n_particles = particles->size();
-    for (uint iter = 0; iter < n_particles; iter++)
+    uint nParticles = particles->size();
+    for (uint iter = 0; iter < nParticles; iter++)
     {
-        *file << particles->at(iter).pos[0] << " " << particles->at(iter).pos[1] << " " << charge << " " << particles->at(iter).vel[0] << " " << particles->at(iter).vel[1] << " " << particles->at(iter).vel[2] << endl;
+        *file << particles->at(iter).pos[0] << " " << particles->at(iter).pos[1] << " " << (int) charge << " " << particles->at(iter).vel[0] << " " << particles->at(iter).vel[1] << " " << particles->at(iter).vel[2] << endl;
     }
 
     cout << "Particles position and velocities saved to a file." << endl;
@@ -319,7 +386,7 @@ void SaveParticles(ofstream *file, deque<t_particle > *particles, int charge)
 
 //
 // Save particles to a file according to iteration number
-int SaveParticles(uint iter, deque<t_particle > *particles, int charge, string name)
+int SaveParticles(uint iter, deque<t_particle > *particles, t_particleType charge, string name)
 {
     ofstream file;
     stringstream fileName;
@@ -331,18 +398,47 @@ int SaveParticles(uint iter, deque<t_particle > *particles, int charge, string n
     double field[m_sizeX][m_sizeY];
     InitField(field);
 
-    uint n_particles = particles->size();
-    for (uint iter = 0; iter < n_particles; iter++)
+    uint nParticles = particles->size();
+    for (uint iter = 0; iter < nParticles; iter++)
     {
-        field[particles->at(iter).node[0]][particles->at(iter).node[1]] += charge;
-        file << particles->at(iter).pos[0] << " " << particles->at(iter).pos[1] << " " << charge << " " << particles->at(iter).vel[0] << " " << particles->at(iter).vel[1] << " " << particles->at(iter).vel[2] << endl;
+        field[particles->at(iter).node[0]][particles->at(iter).node[1]] += ((double) charge) * m_multStats * m_charge;
+        file << particles->at(iter).pos[0] << " " << particles->at(iter).pos[1] << " " << ((double) charge) * m_multStats * m_charge<< " " << particles->at(iter).vel[0] << " " << particles->at(iter).vel[1] << " " << particles->at(iter).vel[2] << endl;
     }
     file.close();
 
     SaveField(iter,field,name);
+    SaveArray(iter,field,name);
 
     cout << "Particles position and velocities run " << iter << " saved to a file." << endl;
     return 0;
+}
+
+//
+// Gaussian generation of velocity
+void GaussianVel(double vel[3], double velSize)
+{
+    double U1, U2, U3, U4;
+
+    do {
+    U1 = ((double) rand())/RAND_MAX;
+    U2 = ((double) rand())/RAND_MAX;
+    U3 = ((double) rand())/RAND_MAX;
+    U4 = ((double) rand())/RAND_MAX;
+    vel[0] = ((velSize/sqrt(3))*sqrt(-2 * log(U1)) * cos(2 * M_PI * U2));
+    vel[1] = ((velSize/sqrt(3))*sqrt(-2 * log(U1)) * sin(2 * M_PI * U2));
+    vel[2] = ((velSize/sqrt(3))*sqrt(-2 * log(U3)) * cos(2 * M_PI * U4));
+    } while ( ! isfinite( vel[0] + vel[1] + vel[2] ));
+}
+
+//
+// Uniform generation of velocity
+void UnifVel(double vel[3], double velSize)
+{
+    do {
+    vel[0] = ((double) rand() * (velSize/sqrt(3))) / RAND_MAX;
+    vel[1] = ((double) rand() * (velSize/sqrt(3))) / RAND_MAX;
+    vel[2] = ((double) rand() * (velSize/sqrt(3))) / RAND_MAX;
+    } while ( ! isfinite( vel[0] + vel[1] + vel[2] ));
 }
 
 //
@@ -351,7 +447,6 @@ void GenerateParticles(deque<t_particle > *particles, double vel)
 {
     t_particle particle;
 
-    double U1, U2, U3, U4;
     for (uint iter = 0; iter < m_nMacroParticles; iter++)
     {
         // position
@@ -361,28 +456,24 @@ void GenerateParticles(deque<t_particle > *particles, double vel)
         particle.node[1] = (int) (particle.pos[1]/dy);
 
         // velocity
-        U1 = ((double) rand())/RAND_MAX;
-        U2 = ((double) rand())/RAND_MAX;
-        U3 = ((double) rand())/RAND_MAX;
-        U4 = ((double) rand())/RAND_MAX;
-        particle.vel[0] = ((vel/sqrt(3))*sqrt(-2 * log(U1)) * cos(2 * M_PI * U2));
-        particle.vel[1] = ((vel/sqrt(3))*sqrt(-2 * log(U1)) * sin(2 * M_PI * U2));
-        particle.vel[2] = ((vel/sqrt(3))*sqrt(-2 * log(U3)) * cos(2 * M_PI * U4));
+//        GaussianVel(particle.vel,vel);
+        UnifVel(particle.vel,vel);
 
         particles->push_back(particle);
     }
 }
 
 //
-// Collisions of particles
-void EvaluateCollisions(deque<t_particle > *particles, deque<t_particle > *particlesPassed)
+// Source of particles
+void EvaluateSource(deque<t_particle > *particles, deque<t_particle > *particlesPassed)
 {
     bool passed = false;
     uint nPassed = 0;
+    uint nErased = 0;
 
     int *x, *y;
-    uint n_particles = particles->size();
-    for (uint iter = 0; iter < n_particles; iter++)
+    uint nParticles = particles->size();
+    for (uint iter = 0; iter < nParticles; iter++)
     {
         x = &particles->at(iter).node[0];
         y = &particles->at(iter).node[1];
@@ -420,6 +511,7 @@ void EvaluateCollisions(deque<t_particle > *particles, deque<t_particle > *parti
 
         if (*x > m_sizeX-1 || *x < 0 || *y > m_sizeY-1 || *y < 0 )
         {
+            nErased++;
             particles->erase(particles->begin() + iter);
             continue;
         }
@@ -436,19 +528,107 @@ void EvaluateCollisions(deque<t_particle > *particles, deque<t_particle > *parti
         }
     }
 
-    cout << "Collisions evaluated, " << nPassed << " particles left the volume." << endl;
+    cout << "Collisions evaluated, " << nPassed << " particles left the volume." << nErased << " particles erased due to out of boundary." << endl;
+}
+
+//
+// Collision of particles
+void EvaluateCollisions(deque<t_particle > *particles, t_particleType type)
+{
+    long nParticles = particles->size();
+
+    double vel2[3];
+    double normVel, normVelPrime, normE2;
+
+    double cosX,sinX;
+    double u, phi, eps, p;
+
+    double mass;
+
+    double e1[3],e2[3],e3[3];
+
+    for (long iter = nParticles-1; iter >= 0; iter--)
+    {
+        p = ((double) rand())/RAND_MAX;
+        if (p <= m_probCollisions)
+        {
+            GaussianVel(vel2,m_neutVel);
+            u = ((double) rand())/RAND_MAX;
+            phi = 2 * M_PI * (((double) rand())/RAND_MAX);
+
+            for (int i = 0; i < 3; i++)
+            {
+                particles->at(iter).vel[i] -= vel2[i];
+            }
+
+            normVel = VectorPower(particles->at(iter).vel,0.5);
+
+            if (type == t_electron)
+            {
+                mass = m_elMass;
+                eps = 0.5 * mass * pow(normVel,2);
+                cosX = 1 + (2 * (1 - pow(1 + eps,u)) / eps);
+                normVelPrime = normVel * sqrt(1 - (2 * mass * (1 - cosX) / m_neutMass));
+            }
+            else if (type == t_proton)
+            {
+                mass = m_ionMass;
+                cosX = sqrt(1 - u);
+                normVelPrime = normVel * cosX;
+            }
+            else
+            {
+                continue;
+            }
+            sinX = sqrt(1 - (cosX * cosX));
+
+            for (int i = 0; i < 3; i++)
+            {
+                e1[i] = particles->at(iter).vel[i] / normVel;
+                e3[i] = 0;
+            }
+
+            if (e1[2] < 0.9)
+            {
+                e3[2] = 1;
+            }
+            else
+            {
+                e3[1] = 1;
+            }
+
+            VectorCross(e1,e3,e2);
+            normE2 = VectorPower(e2,0.5);
+            for (int i = 0; i < 3; i++)
+            {
+                e2[i] /= normE2;
+            }
+            VectorCross(e1,e2,e3);
+
+            for (int i = 0; i < 3; i++)
+            {
+                particles->at(iter).vel[i] = (normVelPrime * ((e1[i] * cosX) + (e2[i] * sinX * cos(phi)) + (e3[i] * sinX * sin(phi)))) + vel2[i];
+            }
+        }
+    }
 }
 
 //
 // Evaluate forces and update particles position/velocities
 // magnetic field done by birsdale method, used global variable magTanEl and magSinEl
-void EvaluateForces(deque<t_particle > *particles, double particleMC, double elField[m_sizeX][m_sizeY][3], t_magField *magConst)
+void EvaluateForces(deque<t_particle > *particles, deque<t_particle > *particlesInteracted, t_particleType type, double elField[m_sizeX][m_sizeY][3], t_magField *magConst)
 {
-    long n_particles = particles->size();
+    long nParticles = particles->size();
     double vMin[3], vPrime[3], vMax[3];
 
+    double particleMC;
+    if (type == t_electron)
+        particleMC = m_elMC;
+    else
+        particleMC = m_ionMC;
+
     int *x, *y;
-    for (long iter = n_particles-1; iter >= 0; iter--)
+    for (long iter = nParticles-1; iter >= 0; iter--)
     {
         x = &particles->at(iter).node[0];
         y = &particles->at(iter).node[1];
@@ -461,13 +641,15 @@ void EvaluateForces(deque<t_particle > *particles, double particleMC, double elF
 
         //
         // erase particle if out of boundaries or in defined geometry
-        if (*x > m_sizeX-1 || *x < 0 || *y > m_sizeY-1 || *y < 0 )
+        if (*x > m_sizeX-1 || *x < 0 || *y > m_sizeY-1 || *y < 0 || *y == 0)
         {
             particles->erase(particles->begin() + iter);
             continue;
         }
-        else if (*x != m_sizeX-1 && *x != 0 && *y != m_sizeY-1 && *y != 0 && m_geometry[*x][*y]) //
+        else if (*x != m_sizeX-1 && *x != 0 && *y != m_sizeY-1 && m_geometry[*x][*y]) //
         {
+            t_particle particle = particles->at(iter);
+            particlesInteracted->push_front(particle);
             particles->erase(particles->begin() + iter);
             continue;
         }
@@ -493,7 +675,7 @@ void EvaluateForces(deque<t_particle > *particles, double particleMC, double elF
             particles->at(iter).vel[i] = vMax[i] + (0.5*dt*particleMC*elField[*x][*y][i]);
         }
     }
-    cout << "Forces evaluated. " << 0.5*dt*particleMC*elField[m_sizeX/2][m_sizeX/2][0] << endl;
+    cout << "Forces evaluated, " << particlesInteracted->size() << " particles interacted with the geometry." << endl;
 }
 
 // ################################################################################
@@ -604,8 +786,8 @@ int main()
 
     //
     // Initialize magnetic field constants for forces evaluation
-    InitMagField(&magElConst);
-    InitMagField(&magIonConst);
+    InitMagField(&magElConst, m_elMC);
+    InitMagField(&magIonConst, m_ionMC);
 
     //
     // Initialize geometry
@@ -613,13 +795,18 @@ int main()
 
     //
     // Generate particle sources and monitored particles
-    deque<t_particle > electronSource;
-    GenerateParticles(&electronSource, m_elVel);
+    deque<t_particle > electronsSource;
+    GenerateParticles(&electronsSource, m_elVel);
     deque<t_particle > electrons;
+    deque<t_particle > electronsInteracted;
 
-    deque<t_particle > ionSource;
-    GenerateParticles(&ionSource, m_ionVel);
+    deque<t_particle > ionsSource;
+    GenerateParticles(&ionsSource, m_ionVel);
     deque<t_particle > ions;
+    deque<t_particle > ionsInteracted;
+
+//    SaveParticles(m_nIterations,&electronSource,t_electron,"el");
+//    SaveParticles(m_nIterations,&ionSource,t_proton,"ion");
 
     double electronCharge = (-1) * m_charge * m_multStats;
     double ionCharge = m_charge * m_multStats;
@@ -628,36 +815,36 @@ int main()
     // Main part of the code
     for (uint ionMove = 0; ionMove < m_nIterations; ionMove++)
     {
-        cout << "-----electrons---------------------------------" << endl;
-        cout << "nx: " << electronSource.begin()->node[0] << ", ny: " << electronSource.begin()->node[1] << endl;
-        cout << " x: " << electronSource.begin()->pos[0] << ", y: "   << electronSource.begin()->pos[1] << endl;
-        cout << "vx: " << electronSource.begin()->vel[0] << ", vy: "  << electronSource.begin()->vel[1] << endl;
-        cout << "number of particles: " << electrons.size() << endl;
-        cout << "-----ions--------------------------------------" << endl;
-        cout << "nx: " << ionSource.begin()->node[0] << ", ny: "<< ionSource.begin()->node[1] << endl;
-        cout << " x: " << ionSource.begin()->pos[0] << ", y: "  << ionSource.begin()->pos[1] << endl;
-        cout << "vx: " << ionSource.begin()->vel[0] << ", vy: " << ionSource.begin()->vel[1] << endl;
-        cout << "number of particles: " << ions.size() << endl;
-
         for (uint elMove = 0; elMove < m_nIterationsEmpty; elMove++)
         {
-            EvaluateCollisions(&ionSource,&ions);
-            EvaluateCollisions(&electronSource,&electrons);
+            EvaluateSource(&ionsSource,&ions);
+            EvaluateSource(&electronsSource,&electrons);
             InitField(rho);
             ChargeToGrid(&electrons,electronCharge,rho);
             ChargeToGrid(&ions,ionCharge,rho);
             InitField(phi);
             CalculatePotential(phi,rho);
             CalculateField(elField,phi);
-            EvaluateForces(&ions, m_ionMC, elField, &magIonConst);
-            EvaluateForces(&electrons, m_elMC, elField, &magElConst);
+            EvaluateCollisions(&ions, t_proton);
+            EvaluateCollisions(&electrons, t_electron);
+            EvaluateForces(&ions, &ionsInteracted, t_proton, elField, &magIonConst);
+            EvaluateForces(&electrons, &electronsInteracted, t_electron, elField, &magElConst);
         }
 
         SaveField(ionMove,phi,"phi");
         SaveField(ionMove,rho,"rho");
         SaveField(ionMove,elField,"E");
-        SaveParticles(ionMove,&electrons,-1,"el");
-        SaveParticles(ionMove,&ions,1,"ion");
+        SaveParticles(ionMove,&electrons,t_electron,"el");
+        SaveParticles(ionMove,&ions,t_proton,"ion");
+        SaveParticles(ionMove,&electronsInteracted,t_electron,"elInt");
+        SaveParticles(ionMove,&ionsInteracted,t_proton,"ionInt");
+//        SaveParticles(ionMove,&electronSource,t_electron,"el");
+//        SaveParticles(ionMove,&ionSource,t_proton,"ion");
+
+        // empty particles that interacted this run
+        electronsInteracted.clear();
+        ionsInteracted.clear();
+
         cout << "##############################################" << endl;
         cout << "##### " << (100*(ionMove+1))/m_nIterations <<"% completed ###########################" << endl;
         cout << "##############################################" << endl;
@@ -667,6 +854,9 @@ int main()
     //
     // Erase everything not needed
     electrons.clear();
+    ions.clear();
+    electronsSource.clear();
+    ionsSource.clear();
     // -------------------------
 
     return 0;
