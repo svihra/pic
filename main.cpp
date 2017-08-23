@@ -18,14 +18,14 @@ const static unsigned long m_nParticles = m_density * m_widthX * m_widthY;  // c
 const static uint m_nMacroParticles = 100000;                               // used number of particles
 const static uint m_multStats = m_nParticles/m_nMacroParticles;             // multiplication factor for stats (real/used particles)
 const static uint m_nIterations = 200;
-const static uint m_nIterationsEmpty = 1;
+const static uint m_nIterationsEmpty = 200;
 const static double m_probCollisions = 0.02;
 
 // used constants
 const static double m_eps_0    = 8.854e-12;
 const static double m_boltzman = 1.38064852e-23;    // m2 kg s-2 K-1
 const static double m_charge   = 1.602e-19;         // C
-const static double m_magB[3]  = {5,0,0};          // B
+const static double m_magB[3]  = {5,5,0};          // B
 const static double m_magBSize = sqrt(pow(m_magB[0],2)+pow(m_magB[1],2)+pow(m_magB[2],2));
 
 const static double m_elMass  = 9.1094e-31;          // kg
