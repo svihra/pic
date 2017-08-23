@@ -39,7 +39,7 @@ Thumbs.db
 pic
 plot
 *.png
-*.plt
+
 
 # xemacs temporary files
 *.flc
