@@ -23,7 +23,7 @@ widthB=1
 
 #function used to map a value to the intervals
 hist(x,width)=width*floor(x/width)+width/2.0
-set term pngcairo size 1500,1000
+set term pngcairo size 1200,600
 set yrange [0:]
 
 #to put an empty boundary around the
