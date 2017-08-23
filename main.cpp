@@ -166,7 +166,7 @@ int SaveArray(uint iter, double field[m_sizeX][m_sizeY], string name)
 {
     ofstream file;
     stringstream fileName;
-    fileName << "./output/fields/" << name << "_" << iter << ".txt";
+    fileName << "./output/fields/" << name << "Arr_" << iter << ".txt";
     file.open(fileName.str().c_str());
     if (!file)
         return -1;
@@ -399,10 +399,10 @@ int SaveParticles(uint iter, deque<t_particle > *particles, t_particleType charg
     InitField(field);
 
     uint nParticles = particles->size();
-    for (uint iter = 0; iter < nParticles; iter++)
+    for (uint particle = 0; particle < nParticles; particle++)
     {
-        field[particles->at(iter).node[0]][particles->at(iter).node[1]] += ((double) charge) * m_multStats * m_charge;
-        file << particles->at(iter).pos[0] << " " << particles->at(iter).pos[1] << " " << ((double) charge) * m_multStats * m_charge<< " " << particles->at(iter).vel[0] << " " << particles->at(iter).vel[1] << " " << particles->at(iter).vel[2] << endl;
+        field[particles->at(particle).node[0]][particles->at(particle).node[1]] += ((double) charge) * m_multStats * m_charge;
+        file << particles->at(particle).pos[0] << " " << particles->at(particle).pos[1] << " " << ((double) charge) * m_multStats * m_charge<< " " << particles->at(particle).vel[0] << " " << particles->at(particle).vel[1] << " " << particles->at(particle).vel[2] << endl;
     }
     file.close();
 
