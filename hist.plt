@@ -1,7 +1,5 @@
 reset
 
-#iterations=99
-
 nVel=100 #number of intervals
 nX=300
 nY=300
