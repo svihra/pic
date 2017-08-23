@@ -181,7 +181,7 @@ int SaveArray(uint iter, double field[m_sizeX][m_sizeY], string name)
     }
 
     x = (int) (m_sizeX / 3);
-    for (int y = (int) (m_sizeY / 3); y > 1; y++)
+    for (int y = (int) (m_sizeY / 3); y > 1; y--)
     {
         file << bin << " " << field[x][y] << endl;
         bin++;
@@ -456,8 +456,8 @@ void GenerateParticles(deque<t_particle > *particles, double vel)
         particle.node[1] = (int) (particle.pos[1]/dy);
 
         // velocity
-//        GaussianVel(particle.vel,vel);
-        UnifVel(particle.vel,vel);
+        GaussianVel(particle.vel,vel);
+//        UnifVel(particle.vel,vel);
 
         particles->push_back(particle);
     }
@@ -829,6 +829,7 @@ int main()
             EvaluateCollisions(&electrons, t_electron);
             EvaluateForces(&ions, &ionsInteracted, t_proton, elField, &magIonConst);
             EvaluateForces(&electrons, &electronsInteracted, t_electron, elField, &magElConst);
+            cout << "##############################################" << endl;
         }
 
         SaveField(ionMove,phi,"phi");
