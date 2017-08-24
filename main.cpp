@@ -25,7 +25,7 @@ const static double m_probCollisions = 0.02;
 const static double m_eps_0    = 8.854e-12;
 const static double m_boltzman = 1.38064852e-23;    // m2 kg s-2 K-1
 const static double m_charge   = 1.602e-19;         // C
-const static double m_magB[3]  = {5,5,0};          // B
+const static double m_magB[3]  = {5,-5,0};          // B
 const static double m_magBSize = sqrt(pow(m_magB[0],2)+pow(m_magB[1],2)+pow(m_magB[2],2));
 
 const static double m_elMass  = 9.1094e-31;          // kg
@@ -172,11 +172,13 @@ int SaveArray(uint iter, double field[m_sizeX][m_sizeY], string name)
         return -1;
     int bin = 0;
     int x,y;
+    int particles = 0;
 
     y = (int) (m_sizeY / 3);
     for (x = 0; x < (int) (m_sizeX / 3); x++)
     {
         file << bin << " " << field[x][y] << endl;
+        particles += field[x][y];
         bin++;
     }
 
@@ -184,6 +186,7 @@ int SaveArray(uint iter, double field[m_sizeX][m_sizeY], string name)
     for (int y = (int) (m_sizeY / 3); y > 1; y--)
     {
         file << bin << " " << field[x][y] << endl;
+        particles += field[x][y];
         bin++;
     }
 
@@ -191,6 +194,7 @@ int SaveArray(uint iter, double field[m_sizeX][m_sizeY], string name)
     for (x = (int) (m_sizeX / 3); x < (int) (m_sizeX - (m_sizeX / 3)); x++)
     {
         file << bin << " " << field[x][y] << endl;
+        particles += field[x][y];
         bin++;
     }
 
@@ -198,6 +202,7 @@ int SaveArray(uint iter, double field[m_sizeX][m_sizeY], string name)
     for (int y = 1; y < (int) (m_sizeY / 3); y++)
     {
         file << bin << " " << field[x][y] << endl;
+        particles += field[x][y];
         bin++;
     }
 
@@ -205,12 +210,13 @@ int SaveArray(uint iter, double field[m_sizeX][m_sizeY], string name)
     for (x = (int) (m_sizeX - (m_sizeX / 3)); x < m_sizeX; x++)
     {
         file << bin << " " << field[x][y] << endl;
+        particles += field[x][y];
         bin++;
     }
 
     file.close();
 
-    cout << "Array " << name << " " << iter << " saved to a file. Number of bins is " << bin << "." << endl;
+    cout << "Array " << name << " " << iter << " saved to a file. Number of bins is " << bin << ", number of particles " << particles << "." << endl;
     return 0;
 }
 
@@ -386,7 +392,7 @@ void SaveParticles(ofstream *file, deque<t_particle > *particles, t_particleType
 
 //
 // Save particles to a file according to iteration number
-int SaveParticles(uint iter, deque<t_particle > *particles, t_particleType charge, string name)
+int SaveParticles(uint iter, deque<t_particle > *particles, t_particleType type, string name)
 {
     ofstream file;
     stringstream fileName;
@@ -401,8 +407,8 @@ int SaveParticles(uint iter, deque<t_particle > *particles, t_particleType charg
     uint nParticles = particles->size();
     for (uint particle = 0; particle < nParticles; particle++)
     {
-        field[particles->at(particle).node[0]][particles->at(particle).node[1]] += ((double) charge) * m_multStats * m_charge;
-        file << particles->at(particle).pos[0] << " " << particles->at(particle).pos[1] << " " << ((double) charge) * m_multStats * m_charge<< " " << particles->at(particle).vel[0] << " " << particles->at(particle).vel[1] << " " << particles->at(particle).vel[2] << endl;
+        field[particles->at(particle).node[0]][particles->at(particle).node[1]] ++;//+= ((double) type) * m_multStats * m_charge;
+        file << particles->at(particle).pos[0] << " " << particles->at(particle).pos[1] << " " << ((double) type) * m_multStats * m_charge<< " " << particles->at(particle).vel[0] << " " << particles->at(particle).vel[1] << " " << particles->at(particle).vel[2] << endl;
     }
     file.close();
 

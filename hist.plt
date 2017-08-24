@@ -24,7 +24,7 @@ widthB=1
 #function used to map a value to the intervals
 hist(x,width)=width*floor(x/width)+width/2.0
 set term png size 1200,600
-set yrange [0:]
+set yrange [0:*]
 
 #to put an empty boundary around the
 #data inside an autoscaled graph.
@@ -33,25 +33,6 @@ set style fill solid 0.5 #fillstyle
 set tics out nomirror
 #set xlabel "v"
 set ylabel "entries"
-
-#f(x) = sqrt((mk/(2*pi*T1))**3)*4*pi*((x-B)**2)*exp((-mk*((x-B)**2))/(2*T1))
-#g(x) = sqrt((mk/(2*pi*T2))**3)*4*pi*((x-D)**2)*exp((-mk*((x-D)**2))/(2*T2))
-
-#f(x) = A*((x-B)**2)*exp((-mk*((x-B)**2))/(2*T1))
-#g(x) = C*((x-D)**2)*exp((-mk*((x-D)**2))/(2*T2))
-
-#m = 9.1094e-31
-#k = 1.38064852e-23
-#mk = 6.5979e-9
-#T1 = 1e7
-#T2 = 1e7
-#A = sqrt((mk/(2*pi*T1))**3)*4*pi
-#C = sqrt((mk/(2*pi*T1))**3)*4*pi
-#B = 1e6
-#D = 1e6
-
-#fit f(x) "electronsStart.txt" u (hist(sqrt(($3**2)+($4**2)+($5**2)),width)):(1.0) via T1
-#fit g(x) "electronsStop.txt" u (hist(sqrt(($3**2)+($4**2)+($5**2)),width)):(1.0) via T2
 
 #count and plot
 set output 'output/hist/stats_'.i.'.png'
@@ -70,11 +51,18 @@ set title "y_{el}"
 plot 'output/particles/el_'.i.'.txt' u (hist($2*multFactor,widthY)):(1.0) smooth freq w boxes notitle
 
 set xrange [minB:maxB]
-set xtics minB,(maxB-minB)/5,maxB
-set boxwidth widthB*0.9
+set yrange [1e-6:2e-4]
+set logscale y
+set arrow from 100, graph 0 to 100, graph 1 nohead
+set arrow from 199, graph 0 to 199, graph 1 nohead
+set arrow from 299, graph 0 to 299, graph 1 nohead
+set arrow from 398, graph 0 to 398, graph 1 nohead
 set title "current_{el}"
-plot 'output/fields/elIntArr_'.i.'.txt' u 1:2 smooth freq w boxes notitle
+plot 'output/fields/elIntArr_'.i.'.txt' u 1:(-$2/(5.05212e-13)) w boxes notitle
+unset arrow
+unset logscale y
 
+set yrange [0:*]
 set xrange [minVel:maxVel]
 set xtics minVel,(maxVel-minVel)/5,maxVel
 set boxwidth widthVel*0.9
@@ -94,11 +82,20 @@ set title "y_{ion}"
 plot 'output/particles/ion_'.i.'.txt' u (hist($2*multFactor,widthY)):(1.0) smooth freq w boxes notitle
 
 set xrange [minB:maxB]
+set yrange [1e-6:2e-4]
+set logscale y
 set xtics minB,(maxB-minB)/5,maxB
 set boxwidth widthB*0.9
 set title "current_{ion}"
-plot 'output/fields/ionIntArr_'.i.'.txt' u 1:2 smooth freq w boxes notitle
+set arrow from 100, graph 0 to 100, graph 1 nohead
+set arrow from 199, graph 0 to 199, graph 1 nohead
+set arrow from 299, graph 0 to 299, graph 1 nohead
+set arrow from 398, graph 0 to 398, graph 1 nohead
+plot 'output/fields/ionIntArr_'.i.'.txt' u 1:($2/(5.05212e-13)) w boxes notitle
+unset arrow
+unset logscale y
 
+set yrange [0:*]
 set xrange [minVel:maxVel]
 set xtics minVel,(maxVel-minVel)/5,maxVel
 set boxwidth widthVel*0.9

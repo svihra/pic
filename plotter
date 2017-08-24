@@ -6,8 +6,8 @@ for (( i = 0; i < $1; i++))
 do
 	((n=n%N)); ((n++==0)) && wait
 #	echo $i &
-#	gnuplot -e "i='$i'" map.plt &
-#   gnuplot -e "i='$i'" plot.plt &
-   gnuplot -e "i='$i'" hist.plt &
+	gnuplot -e "i='$i'" map.plt &
+   gnuplot -e "i='$i'" plot.plt &
+#   gnuplot -e "i='$i'" hist.plt &
 done
 
