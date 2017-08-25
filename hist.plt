@@ -59,7 +59,7 @@ set arrow from 199, graph 0 to 199, graph 1 nohead
 set arrow from 299, graph 0 to 299, graph 1 nohead
 set arrow from 398, graph 0 to 398, graph 1 nohead
 set title "current_{el}"
-plot 'output/fields/elIntArr_'.i.'.txt' u 1:(-$2) w boxes notitle
+plot 'output/fields/elIntArr_'.i.'.txt' u 1:($2) w boxes notitle
 unset arrow
 unset logscale y
 

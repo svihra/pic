@@ -1,5 +1,5 @@
 #!/bin/bash
-N=$(nproc)-1
+N=$(nproc)-4
 
 echo "Running particles plotter using $N cores"
 for (( i = 0; i < $1; i++))
@@ -8,6 +8,6 @@ do
 #	echo $i &
 	gnuplot -e "i='$i'" map.plt &
    gnuplot -e "i='$i'" plot.plt &
-#   gnuplot -e "i='$i'" hist.plt &
+   gnuplot -e "i='$i'" hist.plt &
 done
 
