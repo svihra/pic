@@ -17,8 +17,8 @@ const static unsigned long m_density = 1e12;                                // e
 const static unsigned long m_nParticles = m_density * m_widthX * m_widthY;  // computed number of particles
 const static uint m_nMacroParticles = 100000;                               // used number of particles
 const static uint m_multStats = m_nParticles/m_nMacroParticles;             // multiplication factor for stats (real/used particles)
-const static uint m_nIterations = 200;
-const static uint m_nIterationsEmpty = 400;
+const static uint m_nIterations = 400;
+const static uint m_nIterationsEmpty = 600;
 const static double m_probCollisions = 0.00;
 
 // used constants

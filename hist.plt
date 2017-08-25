@@ -51,7 +51,7 @@ set title "y_{el}"
 plot 'output/particles/el_'.i.'.txt' u (hist($2*multFactor,widthY)):(1.0) smooth freq w boxes notitle
 
 set xrange [minB:maxB]
-set yrange [*:*]
+set yrange [0.5:100]
 set xtics minB,(maxB-minB)/5,maxB
 set logscale y
 set arrow from 100, graph 0 to 100, graph 1 nohead
@@ -83,7 +83,7 @@ set title "y_{ion}"
 plot 'output/particles/ion_'.i.'.txt' u (hist($2*multFactor,widthY)):(1.0) smooth freq w boxes notitle
 
 set xrange [minB:maxB]
-set yrange [*:*]
+set yrange [0.5:100]
 set logscale y
 set xtics minB,(maxB-minB)/5,maxB
 set boxwidth widthB*0.9
