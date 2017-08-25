@@ -1,5 +1,5 @@
 reset
-set dgrid3d 30,30
+set dgrid3d 300,300
 set pm3d map
 
 set xrange [0:300]
@@ -14,7 +14,7 @@ set cbrange [-7e-19:7e-19]
 splot 'output/fields/rho_'.i.'.txt'
 
 set title "Phi"
-set cbrange [-4e-16:4e-16]
+set cbrange [-2e-16:2e-17]
 splot 'output/fields/phi_'.i.'.txt'
 
 set title "E"
