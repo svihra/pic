@@ -4,7 +4,7 @@ set pm3d map
 
 set xrange [0:300]
 set yrange [0:300]
-set term pngcairo size 1500,500
+set term png size 1500,500
 
 set output 'output/map/plasma_'.i.'.png'
 set multiplot layout 1,3

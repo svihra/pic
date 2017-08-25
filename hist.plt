@@ -51,14 +51,15 @@ set title "y_{el}"
 plot 'output/particles/el_'.i.'.txt' u (hist($2*multFactor,widthY)):(1.0) smooth freq w boxes notitle
 
 set xrange [minB:maxB]
-set yrange [1e-6:2e-4]
+set yrange [*:*]
+set xtics minB,(maxB-minB)/5,maxB
 set logscale y
 set arrow from 100, graph 0 to 100, graph 1 nohead
 set arrow from 199, graph 0 to 199, graph 1 nohead
 set arrow from 299, graph 0 to 299, graph 1 nohead
 set arrow from 398, graph 0 to 398, graph 1 nohead
 set title "current_{el}"
-plot 'output/fields/elIntArr_'.i.'.txt' u 1:(-$2/(5.05212e-13)) w boxes notitle
+plot 'output/fields/elIntArr_'.i.'.txt' u 1:(-$2) w boxes notitle
 unset arrow
 unset logscale y
 
@@ -82,7 +83,7 @@ set title "y_{ion}"
 plot 'output/particles/ion_'.i.'.txt' u (hist($2*multFactor,widthY)):(1.0) smooth freq w boxes notitle
 
 set xrange [minB:maxB]
-set yrange [1e-6:2e-4]
+set yrange [*:*]
 set logscale y
 set xtics minB,(maxB-minB)/5,maxB
 set boxwidth widthB*0.9
@@ -91,7 +92,7 @@ set arrow from 100, graph 0 to 100, graph 1 nohead
 set arrow from 199, graph 0 to 199, graph 1 nohead
 set arrow from 299, graph 0 to 299, graph 1 nohead
 set arrow from 398, graph 0 to 398, graph 1 nohead
-plot 'output/fields/ionIntArr_'.i.'.txt' u 1:($2/(5.05212e-13)) w boxes notitle
+plot 'output/fields/ionIntArr_'.i.'.txt' u 1:($2) w boxes notitle
 unset arrow
 unset logscale y
 

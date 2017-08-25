@@ -18,8 +18,8 @@ const static unsigned long m_nParticles = m_density * m_widthX * m_widthY;  // c
 const static uint m_nMacroParticles = 100000;                               // used number of particles
 const static uint m_multStats = m_nParticles/m_nMacroParticles;             // multiplication factor for stats (real/used particles)
 const static uint m_nIterations = 200;
-const static uint m_nIterationsEmpty = 200;
-const static double m_probCollisions = 0.02;
+const static uint m_nIterationsEmpty = 400;
+const static double m_probCollisions = 0.00;
 
 // used constants
 const static double m_eps_0    = 8.854e-12;
@@ -312,7 +312,7 @@ void CalculatePotential(double phi[m_sizeX][m_sizeY], double rho[m_sizeX][m_size
                 }
             }
         }
-        if (err > m_error || iter < 100)
+        if (err > m_error || iter < 50)
             loopFlag = true;
         if (++iter%1000 == 0)
             cout << " - iteration: " << iter << endl;
@@ -407,7 +407,7 @@ int SaveParticles(uint iter, deque<t_particle > *particles, t_particleType type,
     uint nParticles = particles->size();
     for (uint particle = 0; particle < nParticles; particle++)
     {
-        field[particles->at(particle).node[0]][particles->at(particle).node[1]] ++;//+= ((double) type) * m_multStats * m_charge;
+        field[particles->at(particle).node[0]][particles->at(particle).node[1]]++;//+= ((double) type) * m_multStats * m_charge;
         file << particles->at(particle).pos[0] << " " << particles->at(particle).pos[1] << " " << ((double) type) * m_multStats * m_charge<< " " << particles->at(particle).vel[0] << " " << particles->at(particle).vel[1] << " " << particles->at(particle).vel[2] << endl;
     }
     file.close();
@@ -556,7 +556,7 @@ void EvaluateCollisions(deque<t_particle > *particles, t_particleType type)
     for (long iter = nParticles-1; iter >= 0; iter--)
     {
         p = ((double) rand())/RAND_MAX;
-        if (p <= m_probCollisions)
+        if (p < m_probCollisions)
         {
             GaussianVel(vel2,m_neutVel);
             u = ((double) rand())/RAND_MAX;
@@ -699,11 +699,12 @@ bool PrintInfo()
     cout << "##############################################" << endl;
     cout << "       eps0  = " << m_eps_0    << endl;
     cout << "       kb    = " << m_boltzman << endl;
-    cout << "       c     =" << m_charge   << endl;
+    cout << "       c     = " << m_charge   << endl;
     cout << "       Bx    = " << m_magB[0] << endl;
     cout << "       By    = " << m_magB[1] << endl;
     cout << "       Bz    = " << m_magB[2] << endl;
     cout << "       Bsize = " << m_magBSize << endl;
+    cout << "       pColl = " << m_probCollisions << endl;
     cout << endl;
     cout << "##############################################" << endl;
     cout << "################ Electrons ###################" << endl;
@@ -848,7 +849,7 @@ int main()
 //        SaveParticles(ionMove,&electronSource,t_electron,"el");
 //        SaveParticles(ionMove,&ionSource,t_proton,"ion");
 
-        // empty particles that interacted this run
+        // empty particles that interacted this global iteration run
         electronsInteracted.clear();
         ionsInteracted.clear();
 

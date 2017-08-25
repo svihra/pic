@@ -11,11 +11,11 @@ set multiplot layout 1,2
 
 set title "Electrons"
 set cbrange [-1:0]
-splot 'output/fields/el_'.i.'.txt'
+splot 'output/fields/el_'.i.'.txt' u 1:2:(-$3)
 
 set title "Ions"
 set cbrange [0:1]
-splot 'output/fields/ion_'.i.'.txt'
+splot 'output/fields/ion_'.i.'.txt' u 1:2:($3)
 
 unset multiplot
 
