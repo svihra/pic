@@ -11,3 +11,4 @@ do
    gnuplot -e "i='$i'" hist.plt &
 done
 
+./sum

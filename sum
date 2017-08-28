@@ -1,0 +1,23 @@
+#!/bin/bash
+
+
+echo -n > "./output/sum.txt"
+
+for (( i = 0; i < $1; i++))
+do
+    sum1=0;
+    while read a b; do                                                       
+        sum1=$((sum1 + b))
+    done < "./output/fields/elIntArr_$i.txt"
+
+    sum2=0;
+    while read a b; do   
+        sum2=$((sum2 + b))
+    done < "./output/fields/ionIntArr_$i.txt"
+
+    echo $i
+    echo $i $sum1 $sum2 >> "./output/sum.txt"
+done
+
+gnuplot sum.plt
+echo "created sums"

@@ -19,7 +19,7 @@ const static uint m_nMacroParticles = 100000;                               // u
 const static uint m_multStats = m_nParticles/m_nMacroParticles;             // multiplication factor for stats (real/used particles)
 const static uint m_nIterations = 400;
 const static uint m_nIterationsEmpty = 600;
-const static double m_probCollisions = 0.00;
+const static double m_probCollisions = 0.002;
 
 // used constants
 const static double m_eps_0    = 8.854e-12;
